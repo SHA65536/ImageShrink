@@ -11,11 +11,14 @@ type OpaqueImg interface {
 	Opaque() bool
 }
 
+// Takes an image as an input, returns the a new image with only the content cropped
 func ShrinkImg(img image.Image) (image.Image, error) {
 	var ctop, cbot, cleft, cright int
+	// Checking if there's any alpha to be cropped
 	if oim, ok := img.(OpaqueImg); !ok || oim.Opaque() {
 		return nil, errors.New("image: image has no alpha")
 	}
+	//Finding edges of content
 	rect := img.Bounds()
 	for y := rect.Min.Y; y < rect.Max.Y && ctop == 0; y++ {
 		for x := rect.Min.X; x < rect.Max.X; x++ {
@@ -49,9 +52,11 @@ func ShrinkImg(img image.Image) (image.Image, error) {
 			}
 		}
 	}
+	// Calculating the content bounds
 	cropRect := image.Rect(cleft, ctop, cright+1, cbot+1)
 	newRect := image.Rect(0, 0, cropRect.Dx(), cropRect.Dy())
 	newImg := image.NewNRGBA(newRect)
+	// Cropping to new image
 	for y := cropRect.Min.Y; y < cropRect.Max.Y; y++ {
 		for x := cropRect.Min.X; x < cropRect.Max.X; x++ {
 			newImg.Set(x-cropRect.Min.X, y-cropRect.Min.Y, img.At(x, y))
@@ -60,6 +65,7 @@ func ShrinkImg(img image.Image) (image.Image, error) {
 	return newImg, nil
 }
 
+// Takes path to file, writes only the content to the new path
 func ShrinkFile(path, newpath string) error {
 	fd, err := os.Open(path)
 	if err != nil {
