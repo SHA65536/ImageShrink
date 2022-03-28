@@ -50,16 +50,17 @@ func ShrinkImg(img image.Image) (image.Image, error) {
 		}
 	}
 	cropRect := image.Rect(cleft, ctop, cright+1, cbot+1)
-	newImg := image.NewRGBA(cropRect)
+	newRect := image.Rect(0, 0, cropRect.Dx(), cropRect.Dy())
+	newImg := image.NewNRGBA(newRect)
 	for y := cropRect.Min.Y; y < cropRect.Max.Y; y++ {
 		for x := cropRect.Min.X; x < cropRect.Max.X; x++ {
-			newImg.Set(x, y, img.At(x, y))
+			newImg.Set(x-cropRect.Min.X, y-cropRect.Min.Y, img.At(x, y))
 		}
 	}
 	return newImg, nil
 }
 
-func ShrinkFile(path string) error {
+func ShrinkFile(path, newpath string) error {
 	fd, err := os.Open(path)
 	if err != nil {
 		return err
@@ -73,7 +74,7 @@ func ShrinkFile(path string) error {
 	if err != nil {
 		return err
 	}
-	fd, err = os.Create(path)
+	fd, err = os.Create(newpath)
 	if err != nil {
 		return err
 	}
